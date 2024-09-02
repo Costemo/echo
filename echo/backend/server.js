@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const pgp = require('pg-promise')();
+const QueryStream = require('pg-query-stream');
+const JSONStream = require('JSONStream');
 require('dotenv').config();
 
 const app = express();
@@ -11,7 +13,7 @@ const db = pgp({
     port: process.env.DB_PORT,
     database: process.env.DB_NAME,
     user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
+    password: process.env.DB_PASSWORD
 });
 
 db.connect()
@@ -25,6 +27,21 @@ db.connect()
 
 app.use(cors());
 app.use(express.json());
+
+app.get('/stream-data', (req, res) => {
+    const qs = new QueryStream('SELECT * FROM groups');
+    db.stream(qs, s => {
+        s.pipe(JSONStream.stringify()).pipe(res);
+    })
+    .catch(error => {
+        console.log('ERROR:', error.message || error);
+        res.status(500).send('Something went wrong');
+    });
+});
+
+const authRoutes = require('./Routes/auth.js');
+
+app.use('/api/auth', authRoutes);
 
 app.get('/', (req, res) => {
     res.send('Welcome to Echo Backend');
@@ -53,6 +70,8 @@ app.get('/api/groups/:id', (req, res) => {
             res.status(500).send('Something went wrong');
         });
 });
+
+module.exports = { db };
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

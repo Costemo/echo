@@ -1,8 +1,17 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const jwt = require('jasonwebtoken');
-const db = require('../db');
+const jwt = require('jsonwebtoken');
+const pgp = require('pg-promise')();
 const router = express.Router();
+
+const db = pgp({
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+});
+
 
 const saltRounds = 10;
 const secret = process.env.JWT_SECRET;
