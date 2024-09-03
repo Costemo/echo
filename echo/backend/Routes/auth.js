@@ -1,22 +1,24 @@
+module.exports = (db) => {
+
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const pgp = require('pg-promise')();
+// const pgp = require('pg-promise')();
 const router = express.Router();
 
-const db = pgp({
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    database: process.env.DB_NAME,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-});
+// const db = pgp({
+//     host: process.env.DB_HOST,
+//     port: process.env.DB_PORT,
+//     database: process.env.DB_NAME,
+//     user: process.env.DB_USER,
+//     password: process.env.DB_PASSWORD,
+// });
 
 
 const saltRounds = 10;
 const secret = process.env.JWT_SECRET;
 
-router.post('/signup', async (req, res) => {
+router.post('/login', async (req, res) => {
     const { username, password } = req.body;
     try {
         const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -44,4 +46,5 @@ router.post('/login', async (req, res) => {
     }
 });
 
-module.exports = router;
+return router;
+};

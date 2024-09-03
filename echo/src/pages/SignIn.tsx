@@ -1,19 +1,20 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
-    const history = useHistory();
+    const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://loacalhost:5000/api/auth/login', { username, password });
+            const response = await axios.post('http://localhost:5000/api/auth/login', { username, password });
             localStorage.setItem('token', response.data.token);
-            history.push('/home');
+            navigate('/home');
         } catch (err) {
             setError('Invalid username or password');
         }
@@ -21,6 +22,7 @@ const Login = () => {
 
     return (
         <div>
+            <Link to="/">Back</Link>
             <h1>Login</h1>
             <form onSubmit={handleSubmit}>
                 <div>

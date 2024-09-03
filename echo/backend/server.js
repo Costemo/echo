@@ -4,6 +4,9 @@ const pgp = require('pg-promise')();
 const QueryStream = require('pg-query-stream');
 const JSONStream = require('JSONStream');
 require('dotenv').config();
+const jwt = require('jsonwebtoken');
+
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -71,7 +74,7 @@ app.get('/api/groups/:id', (req, res) => {
         });
 });
 
-module.exports = { db };
+module.exports = db;
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

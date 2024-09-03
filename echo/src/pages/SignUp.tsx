@@ -1,18 +1,19 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const SignUp = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
-    const history = useHistory();
+    const navigate = useNavigate();
 
     const handleSubmit = async (e:React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post('http://loaclhost:5000/api/auth/signup', { username, password });
-            history.push('/login');
+            await axios.post('http://localhost:5000/api/auth/signup', { username, password });
+            navigate('/login');
         } catch (err) {
             setError('Failed to create account');
         }
@@ -20,6 +21,7 @@ const SignUp = () => {
 
     return (
         <div>
+            <Link to="/">Back</Link>
             <h1>Sign Up</h1>
             <form onSubmit={handleSubmit}>
                 <div>
