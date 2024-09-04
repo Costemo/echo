@@ -4,6 +4,7 @@ import Group from './pages/Group.tsx';
 import Profile from './pages/Profile.tsx';
 import SignUp from "./pages/SignUp.tsx";
 import SignIn from "./pages/SignIn.tsx";
+import Feed from "./pages/Feed.tsx";
 
 function App() {
   return (
@@ -13,7 +14,8 @@ function App() {
         <Route path="/group" element={<Group />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/signup" element={<SignUp />} />
-        <Route path='/signin' element={<SignIn />} />;
+        <Route path='/signin' element={<SignIn />} />
+        <Route path="/feed" element={<Feed />} />
       </Routes>
     </Router>
   )

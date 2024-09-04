@@ -11,10 +11,12 @@ const SignUp = () => {
 
     const handleSubmit = async (e:React.FormEvent) => {
         e.preventDefault();
+        console.log("Form Submitted");
         try {
             await axios.post('http://localhost:5000/api/auth/signup', { username, password });
-            navigate('/login');
+            navigate('/feed');
         } catch (err) {
+            console.error("Error Occured", err);
             setError('Failed to create account');
         }
     };

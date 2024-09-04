@@ -18,7 +18,12 @@ const router = express.Router();
 const saltRounds = 10;
 const secret = process.env.JWT_SECRET;
 
-router.post('/login', async (req, res) => {
+
+if (!secret) {
+    throw new Error("JWT_SECRET is not defined in environment variables");
+}
+
+router.post('/signup', async (req, res) => {
     const { username, password } = req.body;
     try {
         const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -30,7 +35,7 @@ router.post('/login', async (req, res) => {
     }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/signin', async (req, res) => {
     const { username, password } = req.body;
     try {
         const user = await db.oneOrNone('SELECT * FROM users WHERE username = $1', [username]);
@@ -38,6 +43,7 @@ router.post('/login', async (req, res) => {
             const token = jwt.sign({ id: user.id, username: user.username }, secret, { expiresIn: '1h' });
             res.json({ token });
         } else {
+            console.log("Invalid Credentials");
             res.status(401).send('Invalid credentials');
         }
     } catch (error) {

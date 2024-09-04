@@ -11,11 +11,13 @@ const Login = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        console.log("Form Submitted");
         try {
-            const response = await axios.post('http://localhost:5000/api/auth/login', { username, password });
+            const response = await axios.post('http://localhost:5000/api/auth/signin', { username, password });
             localStorage.setItem('token', response.data.token);
-            navigate('/home');
+            navigate('/feed');
         } catch (err) {
+            console.error("Error Occured", err);
             setError('Invalid username or password');
         }
     };

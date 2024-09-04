@@ -1,9 +1,9 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const pgp = require('pg-promise')();
 const QueryStream = require('pg-query-stream');
 const JSONStream = require('JSONStream');
-require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
 
@@ -42,7 +42,7 @@ app.get('/stream-data', (req, res) => {
     });
 });
 
-const authRoutes = require('./Routes/auth.js');
+const authRoutes = require('./Routes/auth.js')(db);
 
 app.use('/api/auth', authRoutes);
 
