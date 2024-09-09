@@ -6,17 +6,30 @@ const QueryStream = require('pg-query-stream');
 const JSONStream = require('JSONStream');
 const jwt = require('jsonwebtoken');
 
-
-
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+
+const corsOptions = {
+    origin: 'http://localhost:5173', 
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+};
+
+app.use(cors(corsOptions));
+
+
+app.use(express.json());
+
 
 const db = pgp({
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
     database: process.env.DB_NAME,
     user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD
+    password: process.env.DB_PASSWORD,
+    secret: process.env.JWT_SECRET
 });
 
 db.connect()
@@ -31,6 +44,8 @@ db.connect()
 app.use(cors());
 app.use(express.json());
 
+app.set('db', db);
+
 app.get('/stream-data', (req, res) => {
     const qs = new QueryStream('SELECT * FROM groups');
     db.stream(qs, s => {
@@ -43,8 +58,10 @@ app.get('/stream-data', (req, res) => {
 });
 
 const authRoutes = require('./Routes/auth.js')(db);
+const eSpacesRoutes = require('./Routes/eSpaces.js');
 
 app.use('/api/auth', authRoutes);
+app.use('/api/espaces', eSpacesRoutes);
 
 app.get('/', (req, res) => {
     res.send('Welcome to Echo Backend');
@@ -53,6 +70,9 @@ app.get('/', (req, res) => {
 app.get('/api/groups', (req, res) => {
     db.any('SELECT * FROM groups')
         .then(data => {
+            res.json(data);
+        })
+        .catch(error => {
             console.log('ERROR:', error.message || error);
             res.status(500).send('Something went wrong');
         });
@@ -74,8 +94,8 @@ app.get('/api/groups/:id', (req, res) => {
         });
 });
 
-module.exports = db;
-
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+module.exports = db;

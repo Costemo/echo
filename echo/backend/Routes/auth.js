@@ -3,25 +3,34 @@ module.exports = (db) => {
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-// const pgp = require('pg-promise')();
+
 const router = express.Router();
-
-// const db = pgp({
-//     host: process.env.DB_HOST,
-//     port: process.env.DB_PORT,
-//     database: process.env.DB_NAME,
-//     user: process.env.DB_USER,
-//     password: process.env.DB_PASSWORD,
-// });
-
 
 const saltRounds = 10;
 const secret = process.env.JWT_SECRET;
 
-
 if (!secret) {
     throw new Error("JWT_SECRET is not defined in environment variables");
 }
+
+const authenticate = (req, res, next) => {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader; 
+
+    if (!token) {
+        return res.status(401).send('Access denied. No token provided.');
+    }
+
+    try {
+        const decoded = jwt.verify(token, secret);
+        req.user = decoded;
+        next();
+    } catch (ex) {
+        res.status(401).send('Invalid token.');
+    }
+};
+
+module.exports = authenticate;
 
 router.post('/signup', async (req, res) => {
     const { username, password } = req.body;
@@ -54,3 +63,4 @@ router.post('/signin', async (req, res) => {
 
 return router;
 };
+
