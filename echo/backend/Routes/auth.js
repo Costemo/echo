@@ -32,6 +32,17 @@ const authenticate = (req, res, next) => {
 
 module.exports = authenticate;
 
+router.get('/users/search', authenticate, async (req, res) => {
+    const query = req.query.q;
+    try {
+        const users = await db.any('SELECT id, username FROM users WHERE username ILIKE $1', [`%${query}%`]);
+        res.json(users);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).send('Server error');
+    }
+});
+
 router.post('/signup', async (req, res) => {
     const { username, password } = req.body;
     try {
@@ -48,18 +59,24 @@ router.post('/signin', async (req, res) => {
     const { username, password } = req.body;
     try {
         const user = await db.oneOrNone('SELECT * FROM users WHERE username = $1', [username]);
-        if (user && await bcrypt.compare(password, user.password)) {
-            const token = jwt.sign({ id: user.id, username: user.username }, secret, { expiresIn: '1h' });
-            res.json({ token });
+        if (user) {
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (isMatch) {
+                const token = jwt.sign({ id: user.id, username: user.username }, secret, { expiresIn: '1h' });
+                res.json({ token, userId: user.id }); // Include userId in response
+            } else {
+                console.log("Invalid Credentials");
+                res.status(401).send('Invalid credentials');
+            }
         } else {
-            console.log("Invalid Credentials");
             res.status(401).send('Invalid credentials');
         }
     } catch (error) {
-        console.error('ERROR', error.message || error);
+        console.error('ERROR:', error.message || error);
         res.status(500).send('Server error');
     }
 });
+
 
 return router;
 };

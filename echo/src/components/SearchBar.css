@@ -1,0 +1,38 @@
+.search-bar {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 10;
+}
+
+.search-results li {
+    padding: 0.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.search-results li a {
+    color: #6a1b9a;
+    text-decoration: none;
+}
+
+.search-results li a:hover {
+    text-decoration: underline;
+}

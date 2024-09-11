@@ -59,9 +59,11 @@ app.get('/stream-data', (req, res) => {
 
 const authRoutes = require('./Routes/auth.js')(db);
 const eSpacesRoutes = require('./Routes/eSpaces.js');
+const userRoutes = require('./Routes/user.js')(db);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/espaces', eSpacesRoutes);
+app.use('/api/users', userRoutes);
 
 app.get('/', (req, res) => {
     res.send('Welcome to Echo Backend');

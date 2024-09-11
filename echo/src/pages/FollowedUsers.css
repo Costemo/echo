@@ -1,0 +1,30 @@
+.followed-users-container {
+    padding: 20px;
+}
+
+.followed-users-container h2 {
+    margin-top: 0;
+}
+
+.followed-users-list {
+    list-style: none;
+    padding: 0;
+}
+
+.followed-users-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+}
+
+.followed-users-list li a {
+    color: #6a1b9a;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.followed-users-list li a:hover {
+    text-decoration: underline;
+}

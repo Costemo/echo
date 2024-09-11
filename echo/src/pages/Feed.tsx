@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import SearchBar from '../components/SearchBar'; // Adjust the path as necessary
 import './Feed.css';
 
 const Feed = () => {
@@ -7,19 +8,29 @@ const Feed = () => {
 
     const handleLogout = () => {
         localStorage.removeItem('token'); 
+        localStorage.removeItem('userId'); // Remove userId on logout
         navigate('/signin'); 
     };
+
+    const userId = localStorage.getItem('userId'); // Retrieve userId
+
+    console.log('Retrieved userId:', userId); // Debugging line
 
     return (
         <div className="feed-container">
             <header className="header">
                 <h1>Echo Feed</h1>
+                <SearchBar />
             </header>
             <div className="sidebar">
                 <ul>
                     <li><Link to="/groups">Groups</Link></li>
                     <li><Link to="/friends">Friends</Link></li>
-                    <li><Link to="/profile">Profile</Link></li>
+                    {userId ? (
+                        <li><Link to={`/profile/${userId}`}>Profile</Link></li>
+                    ) : (
+                        <li><Link to="/signin">Profile</Link></li>
+                    )}
                     <li><Link to="/espaces">e.Spaces</Link></li>
                     <li><button onClick={handleLogout}>Logout</button></li> 
                 </ul>
