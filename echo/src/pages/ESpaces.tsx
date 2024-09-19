@@ -52,16 +52,15 @@ const ESpaces: React.FC = () => {
     
             console.log('Adding e.Space with token:', token);
     
-            // Send the POST request
             const response = await axios.post<string>('http://localhost:5000/api/espaces/add', newSpace, {
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
             });
     
             console.log('Added e.Space:', response.data);
     
-            // Check if response contains the message you sent
+           
             if (response.data === 'eSpace Created') {
-                // Refresh the list of spaces
+                
                 const updatedSpaces = await axios.get<Space[]>('http://localhost:5000/api/espaces', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -135,18 +134,19 @@ const ESpaces: React.FC = () => {
                 </form>
                 {error && <div style={{ color: 'red' }}>{error}</div>}
                 <ul>
-                    {spaces.length > 0 ? (
-                        spaces.map(space => (
-                            <li key={space.id}>
-                                <h2>{space.name}</h2>
-                                <p>{space.description}</p>
-                                <button onClick={() => handleDeleteSpace(space.id)}>Delete</button>
-                            </li>
-                        ))
-                    ) : (
-                        <p>No spaces available</p>
-                    )}
-                </ul>
+    {spaces.length > 0 ? (
+        spaces.map(space => (
+            <li key={space.id}>
+                <h2>{space.name}</h2>
+                <p>{space.description}</p>
+                <a href={`/espaces/${space.id}`}>View Details</a>
+                <button onClick={() => handleDeleteSpace(space.id)}>Delete</button>
+            </li>
+        ))
+    ) : (
+        <p>No spaces available</p>
+    )}
+</ul>
             </div>
         </div>
     );

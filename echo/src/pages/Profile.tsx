@@ -18,7 +18,7 @@ interface FetchError extends Error {
 }
 
 const Profile = () => {
-    const { id } = useParams<{ id: string }>(); // Get the user ID from the URL
+    const { id } = useParams<{ id: string }>(); 
     const [user, setUser] = useState<User | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isFetched, setIsFetched] = useState(false);
