@@ -13,9 +13,9 @@ const SignIn = () => {
         e.preventDefault();
         try {
             const response = await axios.post('http://localhost:5000/api/auth/signin', { username, password });
-            const { token, userId } = response.data; // Expecting userId from response
+            const { token, userId } = response.data;
             localStorage.setItem('token', token);
-            localStorage.setItem('userId', userId); // Store userId
+            localStorage.setItem('userId', userId); 
             navigate('/feed');
         } catch (err) {
             setError('Invalid username or password');

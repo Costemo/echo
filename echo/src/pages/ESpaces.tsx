@@ -43,28 +43,34 @@ const ESpaces: React.FC = () => {
     }, []);
 
     const handleAddSpace = async (e: React.FormEvent) => {
-        e.preventDefault(); 
+        e.preventDefault();
         try {
             const token = localStorage.getItem('token');
             if (!token) {
                 throw new Error("No token found in localStorage");
             }
-
+    
             console.log('Adding e.Space with token:', token);
-
-            const response = await axios.post<Space>('http://localhost:5000/api/espaces/add', newSpace, {
+    
+            // Send the POST request
+            const response = await axios.post<string>('http://localhost:5000/api/espaces/add', newSpace, {
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
             });
-
+    
             console.log('Added e.Space:', response.data);
-
-            if (response.data && response.data.id) {
-                setSpaces(prevSpaces => [...prevSpaces, response.data]);
+    
+            // Check if response contains the message you sent
+            if (response.data === 'eSpace Created') {
+                // Refresh the list of spaces
+                const updatedSpaces = await axios.get<Space[]>('http://localhost:5000/api/espaces', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                setSpaces(updatedSpaces.data);
             } else {
                 console.error('Unexpected response format:', response.data);
                 setError('Unexpected response format');
             }
-
+    
             setNewSpace({ name: '', description: '' });
         } catch (err) {
             if (axios.isAxiosError(err)) {
@@ -76,6 +82,8 @@ const ESpaces: React.FC = () => {
             }
         }
     };
+    
+    
 
     const handleDeleteSpace = async (id: number) => {
         try {

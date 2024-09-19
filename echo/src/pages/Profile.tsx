@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 interface DecodedToken {
-    id: string; 
+    id: string;
 }
 
 interface User {
@@ -23,16 +23,17 @@ interface FetchError extends Error {
 const Profile = () => {
     const [user, setUser] = useState<User | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [isFetched, setIsFetched] = useState(false);
 
     const parseJwt = (token: string): DecodedToken | null => {
         try {
             const base64Url = token.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
+                '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+            ).join(''));
 
-            console.log('Decoded JWT payload:', jsonPayload); 
+            console.log('Decoded JWT payload:', jsonPayload);
             const parsedPayload = JSON.parse(jsonPayload);
             console.log('Parsed JWT payload:', parsedPayload);
 
@@ -45,36 +46,42 @@ const Profile = () => {
 
     const fetchUser = async (userId: string) => {
         try {
-            const token = localStorage.getItem('token'); 
+            const token = localStorage.getItem('token');
             if (!token) throw new Error('No token found');
 
             console.log('Fetching user with ID:', userId);
-            const response = await axios.get<User>(`http://localhost:5000/api/users/${userId}`, {
+            const response = await axios.get<User>(`http://localhost:5000/api/user/${userId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
+            console.log('User fetched:', response.data);
             setUser(response.data);
+            setIsFetched(true);
         } catch (err) {
             const fetchError = err as FetchError;
-            setError('Error fetching user');
             console.error('Error fetching user:', fetchError.message || fetchError);
+            setError('Error fetching user');
         }
     };
 
     useEffect(() => {
         const token = localStorage.getItem('token');
-        if (token) {
-            const decodedToken = parseJwt(token); 
-            if (decodedToken && decodedToken.id) {
-                fetchUser(decodedToken.id); 
-            } else {
-                setError('Invalid token');
-            }
-        } else {
+        if (!token) {
             setError('No token found');
+            return;
         }
-    }, []);
+
+        const decodedToken = parseJwt(token);
+        if (!decodedToken || !decodedToken.id) {
+            setError('Invalid token');
+            return;
+        }
+
+        if (!isFetched) {
+            fetchUser(decodedToken.id);
+        }
+    }, [isFetched]);
 
     return (
         <div>
