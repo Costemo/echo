@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import axios from 'axios';
-
-interface DecodedToken {
-    id: string;
-}
 
 interface User {
     id: string;
@@ -21,28 +18,10 @@ interface FetchError extends Error {
 }
 
 const Profile = () => {
+    const { id } = useParams<{ id: string }>(); // Get the user ID from the URL
     const [user, setUser] = useState<User | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isFetched, setIsFetched] = useState(false);
-
-    const parseJwt = (token: string): DecodedToken | null => {
-        try {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
-                '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-            ).join(''));
-
-            console.log('Decoded JWT payload:', jsonPayload);
-            const parsedPayload = JSON.parse(jsonPayload);
-            console.log('Parsed JWT payload:', parsedPayload);
-
-            return parsedPayload as DecodedToken;
-        } catch (e) {
-            console.error('Error decoding token:', e);
-            return null;
-        }
-    };
 
     const fetchUser = async (userId: string) => {
         try {
@@ -66,22 +45,10 @@ const Profile = () => {
     };
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            setError('No token found');
-            return;
+        if (id && !isFetched) {
+            fetchUser(id);
         }
-
-        const decodedToken = parseJwt(token);
-        if (!decodedToken || !decodedToken.id) {
-            setError('Invalid token');
-            return;
-        }
-
-        if (!isFetched) {
-            fetchUser(decodedToken.id);
-        }
-    }, [isFetched]);
+    }, [id, isFetched]);
 
     return (
         <div>
