@@ -1,4 +1,4 @@
-const db = require('../db'); // Import your db instance
+const db = require('../db');
 require('dotenv').config();
 
 const searchUsers = async (req, res) => {
@@ -46,12 +46,44 @@ const unfollowUser = async (req, res) => {
     }
 };
 
+const addFriend = async (req, res) => {
+    const { id } = req.params;
+    try {
+        await db.none('INSERT INTO friends (user_id, friend_id) VALUES ($1, $2)', [req.user.id, id]);
+        res.send('Friend added');
+    } catch (error) {
+        console.error('Error adding friend:', error.message, error.stack);
+        res.status(500).send('Server error');
+    }
+};
+
+const removeFriend = async (req, res) => {
+    const { id } = req.params;
+    try {
+        await db.none('DELETE FROM friends WHERE user_id = $1 AND friend_id = $2', [req.user.id, id]);
+        res.send('Friend removed');
+    } catch (error) {
+        console.error('Error removing friend:', error.message, error.stack);
+        res.status(500).send('Server error');
+    }
+};
+
 const getFollowedUsers = async (req, res) => {
     try {
         const followedUsers = await db.any('SELECT id, username FROM users WHERE id IN (SELECT followed_id FROM followers WHERE follower_id = $1)', [req.user.id]);
         res.json(followedUsers);
     } catch (error) {
         console.error('Error fetching followed users:', error.message, error.stack);
+        res.status(500).send('Server error');
+    }
+};
+
+const getFriends = async (req, res) => {
+    try {
+        const friends = await db.any('SELECT id, username FROM users WHERE id IN (SELECT friend_id FROM friends WHERE user_id = $1)', [req.user.id]);
+        res.json(friends);
+    } catch (error) {
+        console.error('Error fetching friends:', error.message, error.stack);
         res.status(500).send('Server error');
     }
 };
@@ -67,11 +99,38 @@ const getCurrentUser = async (req, res) => {
     }
 };
 
+const isFollowed = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await db.oneOrNone('SELECT 1 FROM followers WHERE follower_id = $1 AND followed_id = $2', [req.user.id, id]);
+        res.json(!!result);
+    } catch (error) {
+        console.error('Error checking follow status:', error.message, error.stack);
+        res.status(500).send('Server error');
+    }
+};
+
+const isFriend = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await db.oneOrNone('SELECT 1 FROM friends WHERE user_id = $1 AND friend_id = $2', [req.user.id, id]);
+        res.json(!!result);
+    } catch (error) {
+        console.error('Error checking friend status:', error.message, error.stack);
+        res.status(500).send('Server error');
+    }
+};
+
 module.exports = {
     searchUsers,
     getUser,
     followUser,
     unfollowUser,
     getFollowedUsers,
-    getCurrentUser
+    getCurrentUser,
+    addFriend,
+    removeFriend,
+    getFriends,
+    isFollowed,
+    isFriend
 };
