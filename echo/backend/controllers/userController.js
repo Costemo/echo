@@ -121,6 +121,21 @@ const isFriend = async (req, res) => {
     }
 };
 
+const createPost = async (req, res) => {
+    const { title, body, userId } = req.body;
+    try {
+        const newPost = await db.one(
+            'INSERT INTO posts (title, body, user_id) VALUES ($1, $2, $3) RETURNING id, title, body, user_id AS "userId"',
+            [title, body, userId]
+        );
+        const user = await db.one('SELECT username FROM users WHERE id = $1', [userId]);
+        res.status(201).json({ ...newPost, username: user.username });
+    } catch (error) {
+        console.error('Error creating post:', error.message, error.stack);
+        res.status(500).send('Server error');
+    }
+};
+
 module.exports = {
     searchUsers,
     getUser,
@@ -132,5 +147,6 @@ module.exports = {
     removeFriend,
     getFriends,
     isFollowed,
-    isFriend
+    isFriend,
+    createPost
 };

@@ -1,5 +1,18 @@
 const express = require('express');
-const { searchUsers, getUser, followUser, unfollowUser, addFriend, removeFriend, getFollowedUsers, getFriends, getCurrentUser, isFollowed, isFriend } = require('../controllers/userController');
+const { 
+    searchUsers, 
+    getUser, 
+    followUser, 
+    unfollowUser, 
+    addFriend, 
+    removeFriend, 
+    getFollowedUsers, 
+    getFriends, 
+    getCurrentUser, 
+    isFollowed, 
+    isFriend,
+    createPost
+} = require('../controllers/userController');
 const authenticate = require('../middlewares/authenticate');
 
 const router = express.Router();
@@ -15,5 +28,6 @@ router.get('/friends', authenticate, getFriends);
 router.get('/me', authenticate, getCurrentUser);
 router.get('/:id/isFollowed', authenticate, isFollowed);
 router.get('/:id/isFriend', authenticate, isFriend);
+router.post('/posts', authenticate, createPost);
 
 module.exports = router;

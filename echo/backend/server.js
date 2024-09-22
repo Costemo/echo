@@ -9,6 +9,7 @@ dotenv.config();
 const authRoutes = require('./Routes/auth');
 const userRoutes = require('./Routes/user');
 const eSpaceRoutes = require('./Routes/eSpaces');
+const postRoutes = require('./Routes/post'); 
 
 const app = express();
 
@@ -18,6 +19,9 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/espaces', eSpaceRoutes);
+app.use('/api/posts', postRoutes); 
+
+
 
 app.use((err, req, res, next) => {
     console.error(err.stack);
