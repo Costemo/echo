@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './Posts.css';
 
 type Comment = {
     id: number;
@@ -14,6 +15,8 @@ type Post = {
     title: string;
     body: string;
     comments?: Comment[];
+    liked?: boolean;
+    disliked?: boolean;
 };
 
 type NewPost = {
@@ -40,11 +43,10 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
 
-            // Ensure the posts are mapped correctly to include userId
             setPosts(response.data.map((post: any) => ({
                 ...post,
                 userId: post.user_id,
-                comments: post.comments || [] // Ensure comments are initialized
+                comments: post.comments || [] 
             })));
         } catch (error) {
             console.error('Error fetching posts:', error);
@@ -143,16 +145,32 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
         try {
             const token = localStorage.getItem('token');
             if (!token) throw new Error('No token found');
-
-            await axios.post(`http://localhost:5000/api/posts/${postId}/share`, {}, {
+    
+            const response = await axios.post(`http://localhost:5000/api/posts/${postId}/share`, {}, {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
-
+    
+            const sharedPost = response.data;
+    
+            
+            const currentUserUsername = localStorage.getItem('username');
+            
+            
+            setPosts(prevPosts => [
+                {
+                    ...sharedPost,
+                    sharedBy: currentUserUsername, 
+                    originalUser: sharedPost.originalUser || sharedPost.user, 
+                },
+                ...prevPosts
+            ]);
+    
             console.log('Post shared successfully');
         } catch (error) {
             console.error('Error sharing post:', error);
         }
     };
+    
 
     useEffect(() => {
         fetchPosts();
@@ -181,27 +199,30 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
             )}
 
             {posts.map(post => (
-                <div key={post.id}>
-                    <h2>{post.title}</h2>
-                    <p>{post.body}</p>
-                    <p>Posted by: {post.username}</p>
-                    <button onClick={() => handleLikePost(post.id)}>Like</button>
-                    <button onClick={() => handleDislikePost(post.id)}>Dislike</button>
-                    <button onClick={() => handleSharePost(post.id)}>Share</button>
-                    <button onClick={() => handleDeletePost(post.id)}>Delete</button>
-                    <div>
+                <div key={post.id} className="post-container">
+                    <div className="post-username">{post.username}</div>
+                    <div className="post-title">{post.title}</div>
+                    <div className="post-body">{post.body}</div>
+                    <div className="post-actions">
+                        <button onClick={() => handleLikePost(post.id)}>Like</button>
+                        <button onClick={() => handleDislikePost(post.id)}>Dislike</button>
+                        <button onClick={() => handleDeletePost(post.id)}>Delete</button>
+                        <button onClick={() => handleSharePost(post.id)}>Share</button>
+                    </div>
+                    <div className="post-comments">
+                        {post.comments && post.comments.map(comment => (
+                            <div key={comment.id} className="comment">
+                                <div className="comment-username">{comment.userId}</div>
+                                <div className="comment-text">{comment.comment}</div>
+                            </div>
+                        ))}
                         <input
                             type="text"
-                            placeholder="Comment"
+                            placeholder="Add a comment"
                             value={comment}
                             onChange={e => setComment(e.target.value)}
                         />
                         <button onClick={() => handleCommentPost(post.id)}>Comment</button>
-                    </div>
-                    <div>
-                        {post.comments && post.comments.map((comment: Comment) => (
-                            <p key={comment.id}>{comment.comment}</p>
-                        ))}
                     </div>
                 </div>
             ))}

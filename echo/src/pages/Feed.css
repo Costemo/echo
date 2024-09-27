@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
-
 * {
     box-sizing: border-box;
     margin: 0;
@@ -11,8 +10,8 @@
 body {
     font-family: 'Roboto', Arial, sans-serif;
     margin: 0;
-    background-color: #121212; /* Dark background for dark mode */
-    color: #e0e0e0; /* Light text color */
+    background-color: #121212; 
+    color: #e0e0e0; 
 }
 
 .feed-container {
@@ -113,14 +112,14 @@ body {
     padding: 2rem;
 }
 
-/* Search bubble and post styles */
+
 .search-bubble {
-    background: rgba(255, 255, 255, 0.1); /* Light glass effect */
+    background: rgba(255, 255, 255, 0.1); 
     border-radius: 15px;
     padding: 1rem;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     margin-bottom: 1rem;
-    backdrop-filter: blur(10px); /* Glass effect */
+    backdrop-filter: blur(10px); 
 }
 
 .search-results {
@@ -130,7 +129,7 @@ body {
 }
 
 .search-result-item {
-    background: rgba(255, 255, 255, 0.2); /* Light glass effect */
+    background: rgba(255, 255, 255, 0.2); 
     border-radius: 10px;
     padding: 0.5rem;
     margin-top: 0.5rem;
@@ -139,17 +138,17 @@ body {
 }
 
 .search-result-item:hover {
-    background: rgba(255, 255, 255, 0.3); /* Lighter glass effect on hover */
+    background: rgba(255, 255, 255, 0.3); 
 }
 
 .post {
-    background: rgba(255, 255, 255, 0.1); /* Light glass effect */
+    background: rgba(255, 255, 255, 0.1); 
     border-radius: 15px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     padding: 1rem;
     margin-bottom: 1rem;
     transition: transform 0.3s ease;
-    backdrop-filter: blur(10px); /* Glass effect */
+    backdrop-filter: blur(10px); 
 }
 
 .post:hover {
@@ -157,7 +156,6 @@ body {
 }
 
 h1 {
-    font-size: 24px; /* Larger font size for heading */
-    
-
+    font-size: 24px; 
 }
+

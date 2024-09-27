@@ -125,13 +125,32 @@ const sharePost = async (req, res) => {
     const { id } = req.params;
 
     try {
-        await db.none('INSERT INTO shares (user_id, post_id) VALUES ($1, $2)', [userId, id]);
-        res.status(200).json({ message: 'Post shared successfully' });
+        const originalPost = await db.one(
+            `SELECT posts.*, users.username 
+             FROM posts 
+             JOIN users ON posts.user_id = users.id 
+             WHERE posts.id = $1`, 
+            [id]
+        );
+
+        
+        const sharedPost = await db.one(
+            'INSERT INTO posts (user_id, title, body) VALUES ($1, $2, $3) RETURNING *',
+            [userId, originalPost.title, originalPost.body]
+        );
+
+        
+        res.status(201).json({ 
+            ...sharedPost, 
+            originalUser: originalPost.username, 
+            sharedBy: req.user.username 
+        });
     } catch (error) {
         console.error('Error sharing post:', error.message, error.stack);
         res.status(500).send('Server error');
     }
 };
+
 
 module.exports = {
     createPost,

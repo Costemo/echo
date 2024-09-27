@@ -1,0 +1,112 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', Arial, sans-serif;
+    margin: 0;
+    background-color: #121212; 
+    color: #e0e0e0; 
+}
+
+.post-container {
+    background: rgba(255, 255, 255, 0.1); 
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: transform 0.3s ease;
+    backdrop-filter: blur(10px); 
+}
+
+.post-container:hover {
+    transform: translateY(-5px);
+}
+
+.post-username {
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.post-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.post-body {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+.post-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.post-actions button {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.post-actions button:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.post-comments {
+    margin-top: 1rem;
+}
+
+.comment {
+    background: rgba(255, 255, 255, 0.1); 
+    border-radius: 10px;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.comment-username {
+    font-weight: bold;
+}
+
+.comment-text {
+    margin-left: 1rem;
+}
+
+input[type="text"],
+textarea {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #333;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.1); 
+    color: #fff;
+}
+
+input[type="text"]:focus,
+textarea:focus {
+    border-color: #6200ea; 
+    outline: none;
+}
+
+button {
+    background: #6200ea;
+    border: none;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background: #3700b3; 
+}
