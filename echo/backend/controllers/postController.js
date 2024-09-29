@@ -62,8 +62,6 @@ const getPosts = async (req, res) => {
     }
 };
 
-
-
 const deletePost = async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
@@ -80,20 +78,31 @@ const deletePost = async (req, res) => {
         }
 
         await db.tx(async t => {
-            await t.none('DELETE FROM comments WHERE post_id = $1', [id]);
+            
             await t.none('DELETE FROM likes WHERE post_id = $1', [id]);
+
+            
             await t.none('DELETE FROM dislikes WHERE post_id = $1', [id]);
-            await t.none('DELETE FROM shares WHERE post_id = $1', [id]);
+
+            
+            await t.none('DELETE FROM comment_reactions WHERE comment_id IN (SELECT id FROM comments WHERE post_id = $1)', [id]);
+
+            
+            await t.none('DELETE FROM comment_replies WHERE comment_id IN (SELECT id FROM comments WHERE post_id = $1)', [id]);
+
+            
+            await t.none('DELETE FROM comments WHERE post_id = $1', [id]);
+
+            
             await t.none('DELETE FROM posts WHERE id = $1', [id]);
         });
 
         res.status(200).json({ message: 'Post and related data deleted successfully' });
     } catch (error) {
-        console.error('Error deleting post:', error.message, error.stack);
-        res.status(500).send('Server error');
+        console.error('Error deleting post:', error.message || error);
+        res.status(500).json({ message: 'Server error', error: error.message || error });
     }
 };
-
 
 const likePost = async (req, res) => {
     const userId = req.user.id;

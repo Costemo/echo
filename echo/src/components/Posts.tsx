@@ -98,16 +98,22 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
         try {
             const token = localStorage.getItem('token');
             if (!token) throw new Error('No token found');
-
+    
             await axios.delete(`http://localhost:5000/api/posts/${postId}`, {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
-
+    
             setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
         } catch (error) {
-            console.error('Error deleting post:', error);
+            if (error.response) {
+                console.error('Error deleting post:', error.response.data.message);
+                alert(error.response.data.message); 
+            } else {
+                console.error('Error deleting post:', error.message);
+            }
         }
     };
+    
 
     const handleLikePost = async (postId: number) => {
         try {
