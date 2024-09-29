@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Posts.css';
-import { FaThumbsUp, FaThumbsDown, FaShareSquare } from 'react-icons/fa';
+import { FaThumbsUp, FaThumbsDown, FaShareSquare, FaComment } from 'react-icons/fa';
 
 type Comment = {
     id: number;
@@ -40,6 +40,7 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
     const [posts, setPosts] = useState<Post[]>([]);
     const [comment, setComment] = useState('');
     const [reply, setReply] = useState<{ [key: number]: string }>({});
+    const [commentVisible, setCommentVisible] = useState<{ [key: number]: boolean }>({});
 
     const fetchPosts = async () => {
         try {
@@ -73,7 +74,6 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
             console.error('Error fetching posts:', error);
         }
     };
-    
 
     const handleCreatePost = async () => {
         if (!newPost.title && !newPost.body) return;
@@ -113,7 +113,6 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
             }
         }
     };
-    
 
     const handleLikePost = async (postId: number) => {
         try {
@@ -158,7 +157,6 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
 
-            
             setPosts(prevPosts => prevPosts.map(post => 
                 post.id === postId ? { 
                     ...post, 
@@ -251,28 +249,39 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
         fetchPosts();
     }, []);
 
+    const toggleComments = (postId: number) => {
+        setCommentVisible(prev => ({
+            ...prev,
+            [postId]: !prev[postId],
+        }));
+    };
+
     return (
-        <div className="posts-container">
-            <h2>Posts</h2>
-            {creatingPost ? (
-                <div className="create-post">
+        <div className="posts">
+            {/*  */}
+            <div className="new-post">
+                <button onClick={() => setCreatingPost(true)}>New Post</button>
+            </div>
+
+            {/*  */}
+            {creatingPost && (
+                <div className="new-post-form">
                     <input
                         type="text"
+                        placeholder="Title"
                         value={newPost.title}
                         onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-                        placeholder="Post Title"
                     />
                     <textarea
+                        placeholder="What's on your mind?"
                         value={newPost.body}
                         onChange={(e) => setNewPost({ ...newPost, body: e.target.value })}
-                        placeholder="Post Body"
-                    />
-                    <button onClick={handleCreatePost}>Create Post</button>
+                    ></textarea>
+                    <button onClick={handleCreatePost}>Submit</button>
                     <button onClick={() => setCreatingPost(false)}>Cancel</button>
                 </div>
-            ) : (
-                <button onClick={() => setCreatingPost(true)}>Create New Post</button>
             )}
+
             {posts.map((post) => (
                 <div key={post.id} className="post">
                     <h3>{post.title}</h3>
@@ -284,70 +293,77 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
                         <button onClick={() => handleDislikePost(post.id)}>
                             <FaThumbsDown /> {post.dislikeCount || 0}
                         </button>
+                        
+                        {/*  */}
+                        <button onClick={() => toggleComments(post.id)}>
+                            <FaComment /> {commentVisible[post.id] ? 'Hide Comments' : 'Show Comments'}
+                        </button>
+                        
                         <button onClick={() => handleSharePost(post.id)}>
                             <FaShareSquare /> Share
                         </button>
                     </div>
-    
+
                     {/*  */}
-                    <div className="comment-input">
-                        <input
-                            type="text"
-                            value={comment}
-                            onChange={(e) => setComment(e.target.value)}
-                            placeholder="Add a comment..."
-                        />
-                        <button onClick={() => handleCommentPost(post.id)}>Comment</button>
-                    </div>
-    
-                    <div className="comments">
-                        <h4>Comments</h4>
-                        {post.comments?.map((comment) => (
-                            <div key={comment.id} className="comment">
-                                <p><strong>{comment.username}</strong>: {comment.comment}</p>
-                                <div className="comment-actions">
-                                    <button onClick={() => handleLikeComment(post.id, comment.id)}>
-                                        <FaThumbsUp /> {comment.likes || 0}
-                                    </button>
-                                    <button onClick={() => handleDislikeComment(post.id, comment.id)}>
-                                        <FaThumbsDown /> {comment.dislikes || 0}
-                                    </button>
-                                </div>
-                                {/* */}
-                                <div className="reply-input-container">
-                                    <input
-                                        type="text"
-                                        value={reply[comment.id] || ''}
-                                        onChange={(e) => setReply({ ...reply, [comment.id]: e.target.value })}
-                                        placeholder="Reply..."
-                                    />
-                                    <button onClick={() => handleReplyToComment(post.id, comment.id, reply[comment.id])}>
-                                        Reply
-                                    </button>
-                                </div>
-                                {comment.replies && comment.replies.length > 0 && (
-                                    <div className="replies">
-                                        {comment.replies.map((reply) => (
-                                            <div key={reply.id} className="reply">
-                                                <p><strong>{reply.username}</strong>: {reply.reply}</p>
-                                            </div>
-                                        ))}
+                    {commentVisible[post.id] && (
+                        <div className="comment-input">
+                            <input
+                                type="text"
+                                value={comment}
+                                onChange={(e) => setComment(e.target.value)}
+                                placeholder="Add a comment..."
+                            />
+                            <button onClick={() => handleCommentPost(post.id)}>Comment</button>
+                        </div>
+                    )}
+
+                    {/*  */}
+                    {commentVisible[post.id] && (
+                        <div className="comments">
+                            <h4>Comments</h4>
+                            {post.comments?.map((comment) => (
+                                <div key={comment.id} className="comment">
+                                    <p><strong>{comment.username}</strong>: {comment.comment}</p>
+                                    <div className="comment-actions">
+                                        <button onClick={() => handleLikeComment(post.id, comment.id)}>
+                                            <FaThumbsUp /> {comment.likes || 0}
+                                        </button>
+                                        <button onClick={() => handleDislikeComment(post.id, comment.id)}>
+                                            <FaThumbsDown /> {comment.dislikes || 0}
+                                        </button>
                                     </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-    
-                    {/* */}
+                                    <div className="reply-input-container">
+                                        <input
+                                            type="text"
+                                            value={reply[comment.id] || ''}
+                                            onChange={(e) => setReply({ ...reply, [comment.id]: e.target.value })}
+                                            placeholder="Reply..."
+                                        />
+                                        <button onClick={() => handleReplyToComment(post.id, comment.id, reply[comment.id])}>
+                                            Reply
+                                        </button>
+                                    </div>
+                                    {comment.replies && comment.replies.length > 0 && (
+                                        <div className="replies">
+                                            {comment.replies.map((reply) => (
+                                                <div key={reply.id} className="reply">
+                                                    <p><strong>{reply.username}</strong>: {reply.reply}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/*  */}
                     <button onClick={() => handleDeletePost(post.id)}>Delete Post</button>
+
                 </div>
             ))}
         </div>
     );
-    
-    
-    
-    
 };
 
 export default Posts;
