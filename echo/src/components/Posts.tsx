@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Posts.css';
+import { FaThumbsUp, FaThumbsDown, FaShareSquare } from 'react-icons/fa';
 
 type Comment = {
     id: number;
     userId: number;
+    username: string;
     comment: string;
+    likes: number;
+    dislikes: number;
+    parentId?: number;
+    replies?: Comment[];
 };
 
 type Post = {
@@ -15,8 +21,8 @@ type Post = {
     title: string;
     body: string;
     comments?: Comment[];
-    liked?: boolean;
-    disliked?: boolean;
+    likeCount?: number; 
+    dislikeCount?: number;
 };
 
 type NewPost = {
@@ -33,25 +39,41 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
     const [newPost, setNewPost] = useState<NewPost>({ title: '', body: '' });
     const [posts, setPosts] = useState<Post[]>([]);
     const [comment, setComment] = useState('');
+    const [reply, setReply] = useState<{ [key: number]: string }>({});
 
     const fetchPosts = async () => {
         try {
             const token = localStorage.getItem('token');
             if (!token) throw new Error('No token found');
-
+    
             const response = await axios.get('http://localhost:5000/api/posts', {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
-
+    
             setPosts(response.data.map((post: any) => ({
                 ...post,
                 userId: post.user_id,
-                comments: post.comments || [] 
+                username: post.username,
+                comments: post.comments.map((comment: any) => ({
+                    ...comment,
+                    userId: comment.user_id,
+                    username: comment.comment_username,
+                    replies: comment.replies.map((reply: any) => ({
+                        ...reply,
+                        userId: reply.user_id,
+                        username: reply.reply_username,
+                    })) || [],
+                    likes: comment.likes || 0,
+                    dislikes: comment.dislikes || 0, 
+                })) || [],
+                likeCount: post.like_count || 0, 
+                dislikeCount: post.dislike_count || 0,
             })));
         } catch (error) {
             console.error('Error fetching posts:', error);
         }
     };
+    
 
     const handleCreatePost = async () => {
         if (!newPost.title && !newPost.body) return;
@@ -96,9 +118,7 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
 
-            setPosts(prevPosts => prevPosts.map(post => 
-                post.id === postId ? { ...post, liked: true } : post
-            ));
+            fetchPosts(); 
         } catch (error) {
             console.error('Error liking post:', error);
         }
@@ -113,9 +133,7 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
 
-            setPosts(prevPosts => prevPosts.map(post => 
-                post.id === postId ? { ...post, disliked: true } : post
-            ));
+            fetchPosts();
         } catch (error) {
             console.error('Error disliking post:', error);
         }
@@ -128,12 +146,18 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
             const token = localStorage.getItem('token');
             if (!token) throw new Error('No token found');
 
-            const response = await axios.post(`http://localhost:5000/api/posts/${postId}/comment`, { comment }, {
+            const response = await axios.post(`http://localhost:5000/api/posts/${postId}/comment`, 
+            { comment }, 
+            {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
 
+            
             setPosts(prevPosts => prevPosts.map(post => 
-                post.id === postId ? { ...post, comments: [...(post.comments || []), response.data] } : post
+                post.id === postId ? { 
+                    ...post, 
+                    comments: [...(post.comments || []), { ...response.data, likes: 0, dislikes: 0 }] 
+                } : post
             ));
             setComment('');
         } catch (error) {
@@ -141,93 +165,183 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
         }
     };
 
+    const handleLikeComment = async (postId: number, commentId: number) => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) throw new Error('No token found');
+
+            await axios.post(`http://localhost:5000/api/posts/${postId}/comments/${commentId}/like`, {}, {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+
+            fetchPosts(); 
+        } catch (error) {
+            console.error('Error liking comment:', error);
+        }
+    };
+
+    const handleDislikeComment = async (postId: number, commentId: number) => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) throw new Error('No token found');
+
+            await axios.post(`http://localhost:5000/api/posts/${postId}/comments/${commentId}/dislike`, {}, {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+
+            fetchPosts(); 
+        } catch (error) {
+            console.error('Error disliking comment:', error);
+        }
+    };
+
+    const handleReplyToComment = async (postId: number, commentId: number, replyText: string) => {
+        if (!replyText) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) throw new Error('No token found');
+
+            const response = await axios.post(`http://localhost:5000/api/posts/${postId}/comments/${commentId}/reply`, 
+                { reply: replyText }, 
+                { headers: { 'Authorization': `Bearer ${token}` } }
+            );
+
+            const newReply = response.data;
+
+            setPosts(prevPosts => prevPosts.map(post => 
+                post.id === postId ? { 
+                    ...post, 
+                    comments: post.comments?.map(comment => 
+                        comment.id === commentId ? { 
+                            ...comment, 
+                            replies: [...(comment.replies || []), newReply] 
+                        } : comment
+                    )
+                } : post
+            ));
+            setReply(prev => ({ ...prev, [commentId]: '' })); 
+        } catch (error) {
+            console.error('Error replying to comment:', error);
+        }
+    };
+
     const handleSharePost = async (postId: number) => {
         try {
             const token = localStorage.getItem('token');
             if (!token) throw new Error('No token found');
-    
-            const response = await axios.post(`http://localhost:5000/api/posts/${postId}/share`, {}, {
+
+            await axios.post(`http://localhost:5000/api/posts/${postId}/share`, {}, {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
-    
-            const sharedPost = response.data;
-    
-            
-            const currentUserUsername = localStorage.getItem('username');
-            
-            
-            setPosts(prevPosts => [
-                {
-                    ...sharedPost,
-                    sharedBy: currentUserUsername, 
-                    originalUser: sharedPost.originalUser || sharedPost.user, 
-                },
-                ...prevPosts
-            ]);
-    
+
             console.log('Post shared successfully');
         } catch (error) {
             console.error('Error sharing post:', error);
         }
     };
-    
 
     useEffect(() => {
         fetchPosts();
     }, []);
 
     return (
-        <div>
+        <div className="posts-container">
+            <h2>Posts</h2>
             {creatingPost ? (
-                <div>
+                <div className="create-post">
                     <input
                         type="text"
-                        placeholder="Title"
                         value={newPost.title}
-                        onChange={e => setNewPost({ ...newPost, title: e.target.value })}
+                        onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+                        placeholder="Post Title"
                     />
                     <textarea
-                        placeholder="Body"
                         value={newPost.body}
-                        onChange={e => setNewPost({ ...newPost, body: e.target.value })}
+                        onChange={(e) => setNewPost({ ...newPost, body: e.target.value })}
+                        placeholder="Post Body"
                     />
                     <button onClick={handleCreatePost}>Create Post</button>
                     <button onClick={() => setCreatingPost(false)}>Cancel</button>
                 </div>
             ) : (
-                <button onClick={() => setCreatingPost(true)}>New Post</button>
+                <button onClick={() => setCreatingPost(true)}>Create New Post</button>
             )}
-
-            {posts.map(post => (
-                <div key={post.id} className="post-container">
-                    <div className="post-username">{post.username}</div>
-                    <div className="post-title">{post.title}</div>
-                    <div className="post-body">{post.body}</div>
+            {posts.map((post) => (
+                <div key={post.id} className="post">
+                    <h3>{post.title}</h3>
+                    <p>{post.body}</p>
                     <div className="post-actions">
-                        <button onClick={() => handleLikePost(post.id)}>Like</button>
-                        <button onClick={() => handleDislikePost(post.id)}>Dislike</button>
-                        <button onClick={() => handleDeletePost(post.id)}>Delete</button>
-                        <button onClick={() => handleSharePost(post.id)}>Share</button>
+                        <button onClick={() => handleLikePost(post.id)}>
+                            <FaThumbsUp /> {post.likeCount || 0}
+                        </button>
+                        <button onClick={() => handleDislikePost(post.id)}>
+                            <FaThumbsDown /> {post.dislikeCount || 0}
+                        </button>
+                        <button onClick={() => handleSharePost(post.id)}>
+                            <FaShareSquare /> Share
+                        </button>
                     </div>
-                    <div className="post-comments">
-                        {post.comments && post.comments.map(comment => (
-                            <div key={comment.id} className="comment">
-                                <div className="comment-username">{comment.userId}</div>
-                                <div className="comment-text">{comment.comment}</div>
-                            </div>
-                        ))}
+    
+                    {/*  */}
+                    <div className="comment-input">
                         <input
                             type="text"
-                            placeholder="Add a comment"
                             value={comment}
-                            onChange={e => setComment(e.target.value)}
+                            onChange={(e) => setComment(e.target.value)}
+                            placeholder="Add a comment..."
                         />
                         <button onClick={() => handleCommentPost(post.id)}>Comment</button>
                     </div>
+    
+                    <div className="comments">
+                        <h4>Comments</h4>
+                        {post.comments?.map((comment) => (
+                            <div key={comment.id} className="comment">
+                                <p><strong>{comment.username}</strong>: {comment.comment}</p>
+                                <div className="comment-actions">
+                                    <button onClick={() => handleLikeComment(post.id, comment.id)}>
+                                        <FaThumbsUp /> {comment.likes || 0}
+                                    </button>
+                                    <button onClick={() => handleDislikeComment(post.id, comment.id)}>
+                                        <FaThumbsDown /> {comment.dislikes || 0}
+                                    </button>
+                                </div>
+                                {/* */}
+                                <div className="reply-input-container">
+                                    <input
+                                        type="text"
+                                        value={reply[comment.id] || ''}
+                                        onChange={(e) => setReply({ ...reply, [comment.id]: e.target.value })}
+                                        placeholder="Reply..."
+                                    />
+                                    <button onClick={() => handleReplyToComment(post.id, comment.id, reply[comment.id])}>
+                                        Reply
+                                    </button>
+                                </div>
+                                {comment.replies && comment.replies.length > 0 && (
+                                    <div className="replies">
+                                        {comment.replies.map((reply) => (
+                                            <div key={reply.id} className="reply">
+                                                <p><strong>{reply.username}</strong>: {reply.reply}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+    
+                    {/* */}
+                    <button onClick={() => handleDeletePost(post.id)}>Delete Post</button>
                 </div>
             ))}
         </div>
     );
+    
+    
+    
+    
 };
 
 export default Posts;
