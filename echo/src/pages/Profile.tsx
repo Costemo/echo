@@ -5,6 +5,7 @@ import axios from 'axios';
 interface User {
     id: string;
     username: string;
+    profile_picture: string; 
 }
 
 interface FetchError extends Error {
@@ -24,8 +25,8 @@ const Profile = () => {
     const [isFetched, setIsFetched] = useState(false);
     const [isFollowed, setIsFollowed] = useState(false);
     const [isFriend, setIsFriend] = useState(false);
-    const currentUserId = localStorage.getItem('userId'); // Assume you store current user's ID in localStorage
-
+    const currentUserId = localStorage.getItem('userId'); 
+    
     const fetchUser = async (userId: string) => {
         try {
             const token = localStorage.getItem('token');
@@ -41,7 +42,6 @@ const Profile = () => {
             setUser(response.data);
             setIsFetched(true);
 
-            // Check if the user is already followed
             const followedResponse = await axios.get<boolean>(`http://localhost:5000/api/user/${userId}/isFollowed`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -49,7 +49,6 @@ const Profile = () => {
             });
             setIsFollowed(followedResponse.data);
 
-            // Check if the user is already a friend
             const friendResponse = await axios.get<boolean>(`http://localhost:5000/api/user/${userId}/isFriend`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -97,6 +96,34 @@ const Profile = () => {
         }
     };
 
+    const handleProfilePictureUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files) {
+            const file = event.target.files[0];
+            const formData = new FormData();
+            formData.append('profilePicture', file);
+
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) throw new Error('No token found');
+
+                const imgPreview = URL.createObjectURL(file);
+                setUser(prev => prev ? { ...prev, profile_picture: imgPreview } : null);
+
+                await axios.post(`http://localhost:5000/api/user/${id}/profile-picture`, formData, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+
+                if (id) fetchUser(id);
+            } catch (error) {
+                setError('Error uploading profile picture');
+            }
+        }
+    };
+    
+
     useEffect(() => {
         if (id && !isFetched) {
             fetchUser(id);
@@ -109,8 +136,11 @@ const Profile = () => {
             {user ? (
                 <div>
                     <h1>{user.username}</h1>
+                    <img src={`${user.profile_picture}?t=${new Date().getTime()}`} alt="Profile" />
+                    <input type="file" onChange={handleProfilePictureUpload} />
                     {currentUserId !== id && (
                         <>
+                            
                             <button onClick={handleFollow}>
                                 {isFollowed ? 'Unfollow' : 'Follow'}
                             </button>

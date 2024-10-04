@@ -1,5 +1,35 @@
 const db = require('../db');
 require('dotenv').config();
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/'); 
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${req.params.id}-${Date.now()}${path.extname(file.originalname)}`); 
+    }
+});
+
+const upload = multer({ storage });
+
+const uploadProfilePicture = async (req, res) => {
+    const { id } = req.params;
+    if (!req.file) {
+        return res.status(400).send('No file uploaded');
+    }
+    
+    const profilePictureUrl = `http://localhost:5000/uploads/${req.file.filename}`; 
+
+    try {
+        await db.none('UPDATE users SET profile_picture = $1 WHERE id = $2', [profilePictureUrl, id]);
+        res.json({ message: 'Profile picture updated', profilePictureUrl });
+    } catch (error) {
+        console.error('Error updating profile picture:', error.message, error.stack);
+        res.status(500).send('Server error');
+    }
+};
 
 const searchUsers = async (req, res) => {
     const query = req.query.q;
@@ -15,7 +45,7 @@ const searchUsers = async (req, res) => {
 const getUser = async (req, res) => {
     const { id } = req.params;
     try {
-        const user = await db.oneOrNone('SELECT id, username FROM users WHERE id = $1', [id]);
+        const user = await db.oneOrNone('SELECT id, username, profile_picture FROM users WHERE id = $1', [id]);
         if (!user) return res.status(404).send('User not found');
         res.json(user);
     } catch (error) {
@@ -148,5 +178,6 @@ module.exports = {
     getFriends,
     isFollowed,
     isFriend,
-    createPost
+    createPost,
+    uploadProfilePicture,
 };
