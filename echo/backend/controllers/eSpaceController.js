@@ -1,4 +1,4 @@
-const db = require('../db'); // Import your db instance
+const db = require('../db'); 
 require('dotenv').config();
 
 const addESpace = async (req, res) => {
@@ -58,10 +58,22 @@ const deleteESpace = async (req, res) => {
     }
 };
 
+const searchESpaces = async (req, res) => {
+    const query = req.query.q;
+    try {
+        const eSpaces = await db.any('SELECT id, name FROM e_spaces WHERE name ILIKE $1', [`%${query}%`]);
+        res.json(eSpaces);
+    } catch (error) {
+        console.error('Error fetching eSpaces:', error.message, error.stack);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
 module.exports = {
     addESpace,
     getESpaces,
     getESpaceById,
     updateESpace,
-    deleteESpace
+    deleteESpace,
+    searchESpaces,
 };

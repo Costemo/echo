@@ -9,9 +9,15 @@ type User = {
     username: string;
 };
 
+type ESpace = {
+    id: number;
+    name: string;
+};
+
 const Feed: React.FC = () => {
     const navigate = useNavigate();
-    const [searchResults, setSearchResults] = useState<User[]>([]);
+    const [userSearchResults, setUserSearchResults] = useState<User[]>([]);
+    const [eSpaceSearchResults, setESpaceSearchResults] = useState<ESpace[]>([]);
     const [showSearch, setShowSearch] = useState(false);
     const [sidebarVisible, setSidebarVisible] = useState(true);
 
@@ -22,8 +28,9 @@ const Feed: React.FC = () => {
         navigate('/signin');
     };
 
-    const handleSearchResults = useCallback((results: User[]) => {
-        setSearchResults(results);
+    const handleSearchResults = useCallback((results: { users: User[]; eSpaces: ESpace[] }) => {
+        setUserSearchResults(results.users);
+        setESpaceSearchResults(results.eSpaces);
     }, []);
 
     const toggleSidebar = () => {
@@ -55,24 +62,45 @@ const Feed: React.FC = () => {
                     </ul>
                 </aside>
             )}
-            <main className="content">
-                {showSearch ? (
-                    <div className="search-bubble">
-                        <SearchBar onSearchResults={handleSearchResults} />
-                        {searchResults.length > 0 ? (
-                            <ul className="search-results">
-                                {searchResults.map(user => (
-                                    <li key={user.id} className="search-result-item">
-                                        <Link to={`/profile/${user.id}`}>{user.username}</Link>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : <p>No search results.</p>}
+           <main className="content">
+           {showSearch ? (
+    <div className="search-bubble">
+        <SearchBar onSearchResults={handleSearchResults} />
+        {(userSearchResults.length > 0 || eSpaceSearchResults.length > 0) ? (
+            <div className="search-results">
+                {userSearchResults.length > 0 && (
+                    <div>
+                        <h3>Users</h3>
+                        <ul>
+                            {userSearchResults.map(user => (
+                                <li key={user.id} className="search-result-item">
+                                    <Link to={`/profile/${user.id}`}>{user.username}</Link>
+                                </li>
+                            ))}
+                        </ul>
                     </div>
-                ) : (
-                    <Posts userId={userId} />
                 )}
-            </main>
+                {eSpaceSearchResults.length > 0 && (
+                    <div>
+                        <h3>e.Spaces</h3>
+                        <ul>
+                            {eSpaceSearchResults.map(eSpace => (
+                                <li key={eSpace.id} className="search-result-item">
+                                    <Link to={`/eSpaces/${eSpace.id}`}>{eSpace.name}</Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+            </div>
+        ) : <p>No search results.</p>}
+    </div>
+) : (
+    <Posts userId={userId} />
+)}
+
+</main>
+
         </div>
     );
 };

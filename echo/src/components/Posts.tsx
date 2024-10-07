@@ -284,6 +284,7 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
 
             {posts.map((post) => (
                 <div key={post.id} className="post">
+                    
                     <p className="post-name">{post.username}</p>
                     <h3>{post.title}</h3>
                     <p>{post.body}</p>

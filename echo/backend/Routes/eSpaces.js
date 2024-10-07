@@ -1,8 +1,10 @@
 const express = require('express');
-const { addESpace, getESpaces, getESpaceById, updateESpace, deleteESpace } = require('../controllers/eSpaceController');
+const { addESpace, getESpaces, getESpaceById, updateESpace, deleteESpace, searchESpaces } = require('../controllers/eSpaceController');
 const authenticate = require('../middlewares/authenticate');
 
 const router = express.Router();
+
+router.get('/search', authenticate, searchESpaces); 
 
 router.post('/add', authenticate, addESpace);
 router.get('/', authenticate, getESpaces);

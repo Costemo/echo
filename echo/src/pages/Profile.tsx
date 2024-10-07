@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import './Profile.css';
+import Posts from '../components/Posts'; // Assuming you have a Posts component
 
 interface User {
     id: string;
@@ -32,13 +34,11 @@ const Profile = () => {
             const token = localStorage.getItem('token');
             if (!token) throw new Error('No token found');
 
-            console.log('Fetching user with ID:', userId);
             const response = await axios.get<User>(`http://localhost:5000/api/user/${userId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
-            console.log('User fetched:', response.data);
             setUser(response.data);
             setIsFetched(true);
 
@@ -57,7 +57,6 @@ const Profile = () => {
             setIsFriend(friendResponse.data);
         } catch (err) {
             const fetchError = err as FetchError;
-            console.error('Error fetching user:', fetchError.message || fetchError);
             setError('Error fetching user');
         }
     };
@@ -122,7 +121,6 @@ const Profile = () => {
             }
         }
     };
-    
 
     useEffect(() => {
         if (id && !isFetched) {
@@ -131,25 +129,32 @@ const Profile = () => {
     }, [id, isFetched]);
 
     return (
-        <div>
+        <div className="profile-container">
             {error && <p>{error}</p>}
             {user ? (
-                <div>
-                    <h1>{user.username}</h1>
-                    <img src={`${user.profile_picture}?t=${new Date().getTime()}`} alt="Profile" />
-                    <input type="file" onChange={handleProfilePictureUpload} />
-                    {currentUserId !== id && (
-                        <>
-                            
-                            <button onClick={handleFollow}>
-                                {isFollowed ? 'Unfollow' : 'Follow'}
-                            </button>
-                            <button onClick={handleFriend}>
-                                {isFriend ? 'Remove Friend' : 'Add Friend'}
-                            </button>
-                        </>
-                    )}
-                </div>
+                <>
+                    <header className="profile-header">
+                        <img className="profile-picture" src={`${user.profile_picture}?t=${new Date().getTime()}`} alt="Profile" />
+                        <h1>{user.username}</h1>
+                        {currentUserId !== id && (
+                            <div className="action-buttons">
+                                <button onClick={handleFollow}>
+                                    {isFollowed ? 'Unfollow' : 'Follow'}
+                                </button>
+                                <button onClick={handleFriend}>
+                                    {isFriend ? 'Remove Friend' : 'Add Friend'}
+                                </button>
+                            </div>
+                        )}
+                        {currentUserId === id && (
+                            <input type="file" onChange={handleProfilePictureUpload} />
+                        )}
+                    </header>
+                    <main className="profile-posts">
+                        {/* Pass userId as id */}
+                        <Posts userId={parseInt(id)} />
+                    </main>
+                </>
             ) : (
                 <p>Loading...</p>
             )}
