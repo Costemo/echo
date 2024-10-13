@@ -22,7 +22,6 @@ const createPost = async (req, res) => {
 };
 
 const getUserPosts = async (req, res) => {
-    
     const userId = parseInt(req.params.userId, 10);
     if (isNaN(userId)) {
         return res.status(400).json({ message: 'Invalid user ID' });
@@ -30,7 +29,7 @@ const getUserPosts = async (req, res) => {
 
     try {
         const posts = await db.any(`
-            SELECT posts.id, posts.title, posts.body, posts.user_id, users.username,
+            SELECT posts.id, posts.title, posts.body, posts.user_id, users.username, users.profile_picture,
                 COALESCE(json_agg(comments_with_replies) FILTER (WHERE comments_with_replies.id IS NOT NULL), '[]') AS comments,
                 (SELECT COUNT(*) FROM likes WHERE post_id = posts.id) AS like_count,
                 (SELECT COUNT(*) FROM dislikes WHERE post_id = posts.id) AS dislike_count
@@ -53,7 +52,7 @@ const getUserPosts = async (req, res) => {
                 GROUP BY comments.id, users.username
             ) AS comments_with_replies ON posts.id = comments_with_replies.post_id
             WHERE posts.user_id = $1
-            GROUP BY posts.id, users.username
+            GROUP BY posts.id, users.username, users.profile_picture
             ORDER BY posts.created_at DESC
         `, [userId]);
 
@@ -65,12 +64,13 @@ const getUserPosts = async (req, res) => {
 };
 
 
+
 const getPosts = async (req, res) => {
     const userId = req.user.id;
 
     try {
         const posts = await db.any(`
-            SELECT posts.id, posts.title, posts.body, posts.user_id, users.username,
+            SELECT posts.id, posts.title, posts.body, posts.user_id, users.username, users.profile_picture,
                 COALESCE(json_agg(comments_with_replies) FILTER (WHERE comments_with_replies.id IS NOT NULL), '[]') AS comments,
                 (SELECT COUNT(*) FROM likes WHERE post_id = posts.id) AS like_count,
                 (SELECT COUNT(*) FROM dislikes WHERE post_id = posts.id) AS dislike_count
@@ -95,7 +95,7 @@ const getPosts = async (req, res) => {
             WHERE posts.user_id = $1 OR posts.user_id IN (
                 SELECT followed_id FROM followers WHERE follower_id = $1
             )
-            GROUP BY posts.id, users.username
+            GROUP BY posts.id, users.username, users.profile_picture
             ORDER BY posts.created_at DESC
         `, [userId]);
 
@@ -105,6 +105,7 @@ const getPosts = async (req, res) => {
         res.status(500).send('Server error');
     }
 };
+
 
 
 const deletePost = async (req, res) => {
