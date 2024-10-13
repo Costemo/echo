@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Posts.css';
-import { FaThumbsUp, FaThumbsDown, FaShareSquare, FaComment } from 'react-icons/fa';
+import { FaThumbsUp, FaThumbsDown, FaShareSquare, FaComment, FaTrashAlt, FaReply } from 'react-icons/fa';
+
 
 type Comment = {
     id: number;
@@ -23,6 +24,8 @@ type Post = {
     comments?: Comment[];
     likeCount?: number; 
     dislikeCount?: number;
+    profilePicture: string; 
+
 };
 
 type NewPost = {
@@ -32,7 +35,7 @@ type NewPost = {
 
 type PostsProps = {
     userId: number;
-    isProfile: boolean; // Added prop to distinguish profile from feed
+    isProfile: boolean; 
 };
 
 const Posts: React.FC<PostsProps> = ({ userId, isProfile }) => {
@@ -52,10 +55,13 @@ const Posts: React.FC<PostsProps> = ({ userId, isProfile }) => {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
     
+            console.log("Fetched feed posts:", response.data); 
+    
             setPosts(response.data.map((post: any) => ({
                 ...post,
                 userId: post.user_id,
                 username: post.username,
+                profilePicture: post.profile_picture, 
                 comments: post.comments.map((comment: any) => ({
                     ...comment,
                     userId: comment.user_id,
@@ -75,7 +81,8 @@ const Posts: React.FC<PostsProps> = ({ userId, isProfile }) => {
             console.error('Error fetching posts:', error);
         }
     };
-
+    
+    
     const fetchUserPosts = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -89,6 +96,7 @@ const Posts: React.FC<PostsProps> = ({ userId, isProfile }) => {
                 ...post,
                 userId: post.user_id,
                 username: post.username,
+                profilePicture: post.profile_picture, 
                 comments: post.comments.map((comment: any) => ({
                     ...comment,
                     userId: comment.user_id,
@@ -108,6 +116,7 @@ const Posts: React.FC<PostsProps> = ({ userId, isProfile }) => {
             console.error('Error fetching posts:', error);
         }
     };
+    
 
     const handleCreatePost = async () => {
         if (!newPost.title && !newPost.body) return;
@@ -157,7 +166,7 @@ const Posts: React.FC<PostsProps> = ({ userId, isProfile }) => {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
 
-            isProfile ? fetchUserPosts() : fetchFeedPosts(); // Fetch based on profile or feed
+            isProfile ? fetchUserPosts() : fetchFeedPosts();
         } catch (error) {
             console.error('Error liking post:', error);
         }
@@ -172,7 +181,7 @@ const Posts: React.FC<PostsProps> = ({ userId, isProfile }) => {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
 
-            isProfile ? fetchUserPosts() : fetchFeedPosts(); // Fetch based on profile or feed
+            isProfile ? fetchUserPosts() : fetchFeedPosts(); 
         } catch (error) {
             console.error('Error disliking post:', error);
         }
@@ -212,7 +221,7 @@ const Posts: React.FC<PostsProps> = ({ userId, isProfile }) => {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
 
-            isProfile ? fetchUserPosts() : fetchFeedPosts(); // Fetch based on profile or feed
+            isProfile ? fetchUserPosts() : fetchFeedPosts();
         } catch (error) {
             console.error('Error liking comment:', error);
         }
@@ -227,7 +236,7 @@ const Posts: React.FC<PostsProps> = ({ userId, isProfile }) => {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
 
-            isProfile ? fetchUserPosts() : fetchFeedPosts(); // Fetch based on profile or feed
+            isProfile ? fetchUserPosts() : fetchFeedPosts(); 
         } catch (error) {
             console.error('Error disliking comment:', error);
         }
@@ -269,12 +278,11 @@ const Posts: React.FC<PostsProps> = ({ userId, isProfile }) => {
 
     useEffect(() => {
         if (isProfile) {
-            fetchUserPosts(); // Fetch user posts when component mounts
+            fetchUserPosts();
         } else {
-            fetchFeedPosts(); // Fetch feed posts when component mounts
+            fetchFeedPosts(); 
         }
     }, [isProfile, userId]);
-
 
     return (
         <div className="posts-container">
@@ -299,40 +307,65 @@ const Posts: React.FC<PostsProps> = ({ userId, isProfile }) => {
             )}
             {posts.map(post => (
                 <div key={post.id} className="post">
+                    <div className="post-header">
+                        <img src={post.profilePicture} alt={post.username} className="profile-pic" />
+                        <span className="username">{post.username}</span>
+                        <button className="delete-button" onClick={() => handleDeletePost(post.id)}>
+                            <FaTrashAlt />
+                        </button>
+                    </div>
                     <h3>{post.title}</h3>
                     <p>{post.body}</p>
                     <div className="post-actions">
                         <button onClick={() => handleLikePost(post.id)}><FaThumbsUp /> {post.likeCount}</button>
                         <button onClick={() => handleDislikePost(post.id)}><FaThumbsDown /> {post.dislikeCount}</button>
                         <button onClick={() => handleToggleComment(post.id)}><FaComment /> Comment</button>
-                        <button onClick={() => handleDeletePost(post.id)}>Delete</button>
+                        <button><FaShareSquare /> Share</button> 
                     </div>
                     {commentVisible[post.id] && (
                         <div className="comment-section">
-                            <input
-                                type="text"
-                                placeholder="Write a comment..."
-                                value={comment}
-                                onChange={e => setComment(e.target.value)}
-                            />
-                            <button onClick={() => handleCommentPost(post.id)}>Submit</button>
+                            <div className="comment-input-container">
+                                <input
+                                    type="text"
+                                    placeholder="Write a comment..."
+                                    value={comment}
+                                    onChange={e => setComment(e.target.value)}
+                                />
+                                <button onClick={() => handleCommentPost(post.id)}><FaReply /></button>
+                            </div>
                             {post.comments?.map(comment => (
                                 <div key={comment.id} className="comment">
-                                    <p><strong>{comment.username}</strong>: {comment.comment}</p>
+                                    <div className="comment-header">
+                                        <img src={comment.profilePicture} alt={comment.username} className="profile-pic" />
+                                        <p><strong className="username">{comment.username}</strong>: {comment.comment}</p>
+                                    </div>
                                     <div className="comment-actions">
-                                        <button onClick={() => handleLikeComment(post.id, comment.id)}><FaThumbsUp /> {comment.likes}</button>
-                                        <button onClick={() => handleDislikeComment(post.id, comment.id)}><FaThumbsDown /> {comment.dislikes}</button>
-                                        <input
-                                            type="text"
-                                            placeholder="Reply..."
-                                            value={reply[comment.id] || ''}
-                                            onChange={e => setReply(prev => ({ ...prev, [comment.id]: e.target.value }))}
-                                        />
-                                        <button onClick={() => handleReplyToComment(post.id, comment.id, reply[comment.id])}>Reply</button>
+                                        <div className="like-dislike">
+                                            <button onClick={() => handleLikeComment(post.id, comment.id)}>
+                                                <FaThumbsUp /> {comment.likes}
+                                            </button>
+                                            <button onClick={() => handleDislikeComment(post.id, comment.id)}>
+                                                <FaThumbsDown /> {comment.dislikes}
+                                            </button>
+                                        </div>
+                                        <div className="reply-container">
+                                            <input
+                                                type="text"
+                                                placeholder="Reply..."
+                                                value={reply[comment.id] || ''}
+                                                onChange={e => setReply(prev => ({ ...prev, [comment.id]: e.target.value }))}
+                                            />
+                                            <button className="reply-button" onClick={() => handleReplyToComment(post.id, comment.id, reply[comment.id] || '')}>
+                                                <FaReply />
+                                            </button>
+                                        </div>
                                     </div>
                                     {comment.replies?.map(reply => (
                                         <div key={reply.id} className="reply">
-                                            <p><strong>{reply.username}</strong>: {reply.reply}</p>
+                                            <div className="reply-header">
+                                                <img src={reply.profilePicture} alt={reply.username} className="profile-pic" />
+                                                <p><strong className="username">{reply.username}</strong>: {reply.reply}</p>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -343,6 +376,9 @@ const Posts: React.FC<PostsProps> = ({ userId, isProfile }) => {
             ))}
         </div>
     );
+    
+    
+    
 };
 
 export default Posts;
