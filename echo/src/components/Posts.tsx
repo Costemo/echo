@@ -32,9 +32,10 @@ type NewPost = {
 
 type PostsProps = {
     userId: number;
+    isProfile: boolean; // Added prop to distinguish profile from feed
 };
 
-const Posts: React.FC<PostsProps> = ({ userId }) => {
+const Posts: React.FC<PostsProps> = ({ userId, isProfile }) => {
     const [creatingPost, setCreatingPost] = useState(false);
     const [newPost, setNewPost] = useState<NewPost>({ title: '', body: '' });
     const [posts, setPosts] = useState<Post[]>([]);
@@ -42,12 +43,45 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
     const [reply, setReply] = useState<{ [key: number]: string }>({});
     const [commentVisible, setCommentVisible] = useState<{ [key: number]: boolean }>({});
 
-    const fetchPosts = async () => {
+    const fetchFeedPosts = async () => {
         try {
             const token = localStorage.getItem('token');
             if (!token) throw new Error('No token found');
     
-            const response = await axios.get('http://localhost:5000/api/posts', {
+            const response = await axios.get(`http://localhost:5000/api/posts`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+    
+            setPosts(response.data.map((post: any) => ({
+                ...post,
+                userId: post.user_id,
+                username: post.username,
+                comments: post.comments.map((comment: any) => ({
+                    ...comment,
+                    userId: comment.user_id,
+                    username: comment.comment_username,
+                    replies: comment.replies.map((reply: any) => ({
+                        ...reply,
+                        userId: reply.user_id,
+                        username: reply.reply_username,
+                    })) || [],
+                    likes: comment.likes || 0,
+                    dislikes: comment.dislikes || 0, 
+                })) || [],
+                likeCount: post.like_count || 0, 
+                dislikeCount: post.dislike_count || 0,
+            })));
+        } catch (error) {
+            console.error('Error fetching posts:', error);
+        }
+    };
+
+    const fetchUserPosts = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) throw new Error('No token found');
+    
+            const response = await axios.get(`http://localhost:5000/api/posts/user/${userId}`, {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
     
@@ -98,11 +132,11 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
         try {
             const token = localStorage.getItem('token');
             if (!token) throw new Error('No token found');
-    
+
             await axios.delete(`http://localhost:5000/api/posts/${postId}`, {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
-    
+
             setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
         } catch (error) {
             if (error.response) {
@@ -123,7 +157,7 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
 
-            fetchPosts(); 
+            isProfile ? fetchUserPosts() : fetchFeedPosts(); // Fetch based on profile or feed
         } catch (error) {
             console.error('Error liking post:', error);
         }
@@ -138,7 +172,7 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
 
-            fetchPosts();
+            isProfile ? fetchUserPosts() : fetchFeedPosts(); // Fetch based on profile or feed
         } catch (error) {
             console.error('Error disliking post:', error);
         }
@@ -178,7 +212,7 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
 
-            fetchPosts(); 
+            isProfile ? fetchUserPosts() : fetchFeedPosts(); // Fetch based on profile or feed
         } catch (error) {
             console.error('Error liking comment:', error);
         }
@@ -193,7 +227,7 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
 
-            fetchPosts(); 
+            isProfile ? fetchUserPosts() : fetchFeedPosts(); // Fetch based on profile or feed
         } catch (error) {
             console.error('Error disliking comment:', error);
         }
@@ -217,151 +251,94 @@ const Posts: React.FC<PostsProps> = ({ userId }) => {
                 post.id === postId ? { 
                     ...post, 
                     comments: post.comments?.map(comment => 
-                        comment.id === commentId ? { 
-                            ...comment, 
-                            replies: [...(comment.replies || []), newReply] 
-                        } : comment
-                    )
+                        comment.id === commentId 
+                            ? { ...comment, replies: [...(comment.replies || []), newReply] } 
+                            : comment
+                    ) 
                 } : post
             ));
-            setReply(prev => ({ ...prev, [commentId]: '' })); 
+            setReply(prev => ({ ...prev, [commentId]: '' }));
         } catch (error) {
             console.error('Error replying to comment:', error);
         }
     };
 
-    const handleSharePost = async (postId: number) => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) throw new Error('No token found');
-
-            await axios.post(`http://localhost:5000/api/posts/${postId}/share`, {}, {
-                headers: { 'Authorization': `Bearer ${token}` },
-            });
-
-            console.log('Post shared successfully');
-        } catch (error) {
-            console.error('Error sharing post:', error);
-        }
+    const handleToggleComment = (postId: number) => {
+        setCommentVisible(prev => ({ ...prev, [postId]: !prev[postId] }));
     };
 
     useEffect(() => {
-        fetchPosts();
-    }, []);
+        if (isProfile) {
+            fetchUserPosts(); // Fetch user posts when component mounts
+        } else {
+            fetchFeedPosts(); // Fetch feed posts when component mounts
+        }
+    }, [isProfile, userId]);
 
-    const toggleComments = (postId: number) => {
-        setCommentVisible(prev => ({
-            ...prev,
-            [postId]: !prev[postId],
-        }));
-    };
 
     return (
-        <div className="posts">
-            {/*  */}
-            <div className="new-post">
-                <button onClick={() => setCreatingPost(true)}>New Post</button>
-            </div>
-
-            {/*  */}
+        <div className="posts-container">
+            <button className="create-post-button" onClick={() => setCreatingPost(!creatingPost)}>
+                {creatingPost ? 'Cancel' : 'Create Post'}
+            </button>
             {creatingPost && (
-                <div className="new-post-form">
+                <div className="create-post-form">
                     <input
                         type="text"
-                        placeholder="Title"
+                        placeholder="Post Title"
                         value={newPost.title}
-                        onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+                        onChange={e => setNewPost({ ...newPost, title: e.target.value })}
                     />
                     <textarea
-                        placeholder="What's on your mind?"
+                        placeholder="Post Body"
                         value={newPost.body}
-                        onChange={(e) => setNewPost({ ...newPost, body: e.target.value })}
-                    ></textarea>
-                    <button onClick={handleCreatePost}>Submit</button>
-                    <button onClick={() => setCreatingPost(false)}>Cancel</button>
+                        onChange={e => setNewPost({ ...newPost, body: e.target.value })}
+                    />
+                    <button onClick={handleCreatePost}>Submit Post</button>
                 </div>
             )}
-
-            {posts.map((post) => (
+            {posts.map(post => (
                 <div key={post.id} className="post">
-                    
-                    <p className="post-name">{post.username}</p>
                     <h3>{post.title}</h3>
                     <p>{post.body}</p>
                     <div className="post-actions">
-                        <button onClick={() => handleLikePost(post.id)}>
-                            <FaThumbsUp /> {post.likeCount || 0}
-                        </button>
-                        <button onClick={() => handleDislikePost(post.id)}>
-                            <FaThumbsDown /> {post.dislikeCount || 0}
-                        </button>
-                        
-                        {/*  */}
-                        <button onClick={() => toggleComments(post.id)}>
-                            <FaComment /> {commentVisible[post.id] ? 'Hide Comments' : 'Show Comments'}
-                        </button>
-                        
-                        <button onClick={() => handleSharePost(post.id)}>
-                            <FaShareSquare /> Share
-                        </button>
+                        <button onClick={() => handleLikePost(post.id)}><FaThumbsUp /> {post.likeCount}</button>
+                        <button onClick={() => handleDislikePost(post.id)}><FaThumbsDown /> {post.dislikeCount}</button>
+                        <button onClick={() => handleToggleComment(post.id)}><FaComment /> Comment</button>
+                        <button onClick={() => handleDeletePost(post.id)}>Delete</button>
                     </div>
-
-                    {/*  */}
                     {commentVisible[post.id] && (
-                        <div className="comment-input">
+                        <div className="comment-section">
                             <input
                                 type="text"
+                                placeholder="Write a comment..."
                                 value={comment}
-                                onChange={(e) => setComment(e.target.value)}
-                                placeholder="Add a comment..."
+                                onChange={e => setComment(e.target.value)}
                             />
-                            <button onClick={() => handleCommentPost(post.id)}>Comment</button>
-                        </div>
-                    )}
-
-                    {/*  */}
-                    {commentVisible[post.id] && (
-                        <div className="comments">
-                            <h4>Comments</h4>
-                            {post.comments?.map((comment) => (
+                            <button onClick={() => handleCommentPost(post.id)}>Submit</button>
+                            {post.comments?.map(comment => (
                                 <div key={comment.id} className="comment">
                                     <p><strong>{comment.username}</strong>: {comment.comment}</p>
                                     <div className="comment-actions">
-                                        <button onClick={() => handleLikeComment(post.id, comment.id)}>
-                                            <FaThumbsUp /> {comment.likes || 0}
-                                        </button>
-                                        <button onClick={() => handleDislikeComment(post.id, comment.id)}>
-                                            <FaThumbsDown /> {comment.dislikes || 0}
-                                        </button>
-                                    </div>
-                                    <div className="reply-input-container">
+                                        <button onClick={() => handleLikeComment(post.id, comment.id)}><FaThumbsUp /> {comment.likes}</button>
+                                        <button onClick={() => handleDislikeComment(post.id, comment.id)}><FaThumbsDown /> {comment.dislikes}</button>
                                         <input
                                             type="text"
-                                            value={reply[comment.id] || ''}
-                                            onChange={(e) => setReply({ ...reply, [comment.id]: e.target.value })}
                                             placeholder="Reply..."
+                                            value={reply[comment.id] || ''}
+                                            onChange={e => setReply(prev => ({ ...prev, [comment.id]: e.target.value }))}
                                         />
-                                        <button onClick={() => handleReplyToComment(post.id, comment.id, reply[comment.id])}>
-                                            Reply
-                                        </button>
+                                        <button onClick={() => handleReplyToComment(post.id, comment.id, reply[comment.id])}>Reply</button>
                                     </div>
-                                    {comment.replies && comment.replies.length > 0 && (
-                                        <div className="replies">
-                                            {comment.replies.map((reply) => (
-                                                <div key={reply.id} className="reply">
-                                                    <p><strong>{reply.username}</strong>: {reply.reply}</p>
-                                                </div>
-                                            ))}
+                                    {comment.replies?.map(reply => (
+                                        <div key={reply.id} className="reply">
+                                            <p><strong>{reply.username}</strong>: {reply.reply}</p>
                                         </div>
-                                    )}
+                                    ))}
                                 </div>
                             ))}
                         </div>
                     )}
-
-                    {/*  */}
-                    <button onClick={() => handleDeletePost(post.id)}>Delete Post</button>
-
                 </div>
             ))}
         </div>

@@ -21,6 +21,50 @@ const createPost = async (req, res) => {
     }
 };
 
+const getUserPosts = async (req, res) => {
+    
+    const userId = parseInt(req.params.userId, 10);
+    if (isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+    }
+
+    try {
+        const posts = await db.any(`
+            SELECT posts.id, posts.title, posts.body, posts.user_id, users.username,
+                COALESCE(json_agg(comments_with_replies) FILTER (WHERE comments_with_replies.id IS NOT NULL), '[]') AS comments,
+                (SELECT COUNT(*) FROM likes WHERE post_id = posts.id) AS like_count,
+                (SELECT COUNT(*) FROM dislikes WHERE post_id = posts.id) AS dislike_count
+            FROM posts
+            JOIN users ON posts.user_id = users.id
+            LEFT JOIN (
+                SELECT comments.id, comments.post_id, comments.comment, comments.user_id,
+                       users.username AS comment_username,
+                       COALESCE(json_agg(comment_replies) FILTER (WHERE comment_replies.id IS NOT NULL), '[]') AS replies,
+                       (SELECT COUNT(*) FROM comment_reactions WHERE comment_id = comments.id AND type = 'like') AS likes,
+                       (SELECT COUNT(*) FROM comment_reactions WHERE comment_id = comments.id AND type = 'dislike') AS dislikes
+                FROM comments
+                JOIN users ON comments.user_id = users.id
+                LEFT JOIN (
+                    SELECT comment_replies.id, comment_replies.comment_id, comment_replies.reply, comment_replies.user_id,
+                           users.username AS reply_username
+                    FROM comment_replies
+                    JOIN users ON comment_replies.user_id = users.id
+                ) AS comment_replies ON comments.id = comment_replies.comment_id
+                GROUP BY comments.id, users.username
+            ) AS comments_with_replies ON posts.id = comments_with_replies.post_id
+            WHERE posts.user_id = $1
+            GROUP BY posts.id, users.username
+            ORDER BY posts.created_at DESC
+        `, [userId]);
+
+        res.status(200).json(posts);
+    } catch (error) {
+        console.error('Error fetching posts:', error.message, error.stack);
+        res.status(500).send('Server error');
+    }
+};
+
+
 const getPosts = async (req, res) => {
     const userId = req.user.id;
 
@@ -61,6 +105,7 @@ const getPosts = async (req, res) => {
         res.status(500).send('Server error');
     }
 };
+
 
 const deletePost = async (req, res) => {
     const { id } = req.params;
@@ -267,4 +312,5 @@ module.exports = {
     replyToComment,
     getPostReactions,
     getCommentReactions,
+    getUserPosts,
 };

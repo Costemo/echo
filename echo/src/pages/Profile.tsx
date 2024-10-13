@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import './Profile.css';
-import Posts from '../components/Posts'; // Assuming you have a Posts component
+import Posts from '../components/Posts'; 
 
 interface User {
     id: string;
@@ -151,8 +151,8 @@ const Profile = () => {
                         )}
                     </header>
                     <main className="profile-posts">
-                        {/* Pass userId as id */}
-                        <Posts userId={parseInt(id)} />
+                        
+                        <Posts userId={parseInt(id)} isProfile={true} />
                     </main>
                 </>
             ) : (
