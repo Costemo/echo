@@ -1,5 +1,5 @@
 .posts-container {
-    max-width: 800px;
+    max-width: 100%;
     margin: 0 auto;
     padding: 20px;
     background-color: #1e1e2f;
@@ -51,6 +51,7 @@
     height: 40px;
     border-radius: 50%;
     margin-right: 10px;
+    border: 1px solid white;
 }
 
 .username {
@@ -101,12 +102,13 @@
     display: flex;
     align-items: center;
     position: relative;
+    
 }
 
 .comment-input-container input[type="text"] {
     flex-grow: 1;
     padding: 10px 40px 10px 10px;
-    border: none;
+    border: 1px solid #747272;
     border-radius: 20px;
     background-color: #2b2b3a;
     color: white;
@@ -131,9 +133,11 @@
 
 .comment {
     margin-top: 10px;
-    padding: 10px 0;
-    border-bottom: 1px solid #747272;
-    border-top: 1px solid #747272;
+    padding: 10px ;
+    /* border-bottom: 1px solid #747272;
+    border-top: 1px solid #747272; */
+    border: 1px solid #747272;
+    border-radius: 20px;
     display: flex;
     flex-direction: column;
 }
@@ -174,12 +178,13 @@
     display: flex;
     align-items: center;
     position: relative;
+    
 }
 
 .reply-container input[type="text"] {
     flex-grow: 1;
     padding: 10px 40px 10px 10px; 
-    border: none;
+    border: .5px solid #747272;
     border-radius: 20px;
     background-color: #2b2b3a;
     color: white;
@@ -204,6 +209,8 @@
 
 .reply {
     margin-top: 5px; 
+    margin-left: 10px;
+    border-left: 2px solid white;
 }
 
 .reply-header {

@@ -78,7 +78,7 @@ const getPosts = async (req, res) => {
             JOIN users ON posts.user_id = users.id
             LEFT JOIN (
                 SELECT comments.id, comments.post_id, comments.comment, comments.user_id,
-                       users.username AS comment_username,
+                       users.username AS comment_username, users.profile_picture AS comment_profile_picture,  -- Include profile picture for comments
                        COALESCE(json_agg(comment_replies) FILTER (WHERE comment_replies.id IS NOT NULL), '[]') AS replies,
                        (SELECT COUNT(*) FROM comment_reactions WHERE comment_id = comments.id AND type = 'like') AS likes,
                        (SELECT COUNT(*) FROM comment_reactions WHERE comment_id = comments.id AND type = 'dislike') AS dislikes
@@ -86,11 +86,11 @@ const getPosts = async (req, res) => {
                 JOIN users ON comments.user_id = users.id
                 LEFT JOIN (
                     SELECT comment_replies.id, comment_replies.comment_id, comment_replies.reply, comment_replies.user_id,
-                           users.username AS reply_username
+                           users.username AS reply_username, users.profile_picture AS reply_profile_picture  -- Include profile picture for replies
                     FROM comment_replies
                     JOIN users ON comment_replies.user_id = users.id
                 ) AS comment_replies ON comments.id = comment_replies.comment_id
-                GROUP BY comments.id, users.username
+                GROUP BY comments.id, users.username, users.profile_picture
             ) AS comments_with_replies ON posts.id = comments_with_replies.post_id
             WHERE posts.user_id = $1 OR posts.user_id IN (
                 SELECT followed_id FROM followers WHERE follower_id = $1

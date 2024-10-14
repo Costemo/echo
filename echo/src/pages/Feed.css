@@ -109,7 +109,7 @@ body {
 
 .content {
     grid-area: content;
-    padding: 2rem;
+    padding: 15px;
 }
 
 
