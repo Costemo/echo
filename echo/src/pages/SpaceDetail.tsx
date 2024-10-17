@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import './Profile.css'; 
 import Posts from '../components/Posts';
+import ESpacePosts from '../components/ESpacePosts';
+
 
 interface Space {
     id: number;
@@ -49,9 +51,8 @@ const SpaceDetail: React.FC = () => {
                         <p>{space.description}</p>
                     </header>
                     <main className="profile-posts">
-                        {/*  */}
-                        <Posts spaceId={parseInt(id)} />
-                    </main>
+    <ESpacePosts spaceId={parseInt(id)} />
+</main>
                 </>
             ) : (
                 <p>Loading...</p>

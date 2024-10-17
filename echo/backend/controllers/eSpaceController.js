@@ -1,6 +1,42 @@
 const db = require('../db'); 
 require('dotenv').config();
 
+const createESpacePost = async (req, res) => {
+    const { title, body } = req.body;
+    const userId = req.user.id;
+    const spaceId = req.params.spaceId;
+
+    if (!title && !body) {
+        return res.status(400).json({ message: 'Post must have a title or body' });
+    }
+
+    try {
+        const newPost = await db.one(
+            'INSERT INTO posts (user_id, title, body, space_id) VALUES ($1, $2, $3, $4) RETURNING *',
+            [userId, title, body, spaceId]
+        );
+        res.status(201).json(newPost);
+    } catch (error) {
+        console.error('Error creating eSpace post:', error.message, error.stack);
+        res.status(500).send('Server error');
+    }
+};
+
+const getESpacePosts = async (req, res) => {
+    const spaceId = req.params.spaceId;
+
+    try {
+        const posts = await db.any('SELECT * FROM posts WHERE space_id = $1', [spaceId]);
+        res.status(200).json(posts);
+    } catch (error) {
+        console.error('Error fetching eSpace posts:', error.message);
+        res.status(500).send('Server error');
+    }
+};
+
+
+
+
 const addESpace = async (req, res) => {
     const { name, description } = req.body;
     try {
@@ -76,4 +112,6 @@ module.exports = {
     updateESpace,
     deleteESpace,
     searchESpaces,
+    createESpacePost,
+    getESpacePosts,
 };
