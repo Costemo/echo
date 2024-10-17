@@ -95,9 +95,7 @@ const fetchUserPosts = async () => {
         if (!token) throw new Error('No token found');
 
         
-        const userId = localStorage.getItem('userId');
-
-        const response = await axios.get(`http://localhost:5000/api/users/${userId}/posts`, {
+        const response = await axios.get(`http://localhost:5000/api/posts/user/${userId}`, {
             headers: { 'Authorization': `Bearer ${token}` },
         });
 
@@ -129,6 +127,7 @@ const fetchUserPosts = async () => {
         console.error('Error fetching user posts:', error);
     }
 };
+
 
     
     
