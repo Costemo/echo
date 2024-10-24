@@ -34,7 +34,77 @@ const getESpacePosts = async (req, res) => {
     }
 };
 
+const likeESpacePost = async (req, res) => {
+    const userId = req.user.id;
+    const { postId } = req.params;
 
+    try {
+        await db.none('INSERT INTO likes (user_id, post_id) VALUES ($1, $2)', [userId, postId]);
+        res.status(200).json({ message: 'eSpace post liked successfully' });
+    } catch (error) {
+        console.error('Error liking eSpace post:', error.message, error.stack);
+        res.status(500).send('Server error');
+    }
+};
+
+
+const dislikeESpacePost = async (req, res) => {
+    const userId = req.user.id;
+    const { postId } = req.params;
+
+    try {
+        await db.none('DELETE FROM likes WHERE user_id = $1 AND post_id = $2', [userId, postId]);
+        res.status(200).json({ message: 'eSpace post disliked successfully' });
+    } catch (error) {
+        console.error('Error disliking eSpace post:', error.message, error.stack);
+        res.status(500).send('Server error');
+    }
+};
+
+
+const commentESpacePost = async (req, res) => {
+    const userId = req.user.id;
+    const { postId } = req.params;
+    const { comment } = req.body; // Ensure this matches your request body
+
+    if (!comment) {
+        return res.status(400).json({ message: 'Comment cannot be empty' });
+    }
+
+    try {
+        const newComment = await db.one(
+            'INSERT INTO comments (user_id, post_id, comment) VALUES ($1, $2, $3) RETURNING *',
+            [userId, postId, comment]
+        );
+        res.status(201).json(newComment);
+    } catch (error) {
+        console.error('Error commenting on eSpace post:', error.message, error.stack);
+        res.status(500).send('Server error');
+    }
+};
+
+
+
+const replyToESpaceComment = async (req, res) => {
+    const userId = req.user.id;
+    const { commentId } = req.params;
+    const { reply } = req.body;
+
+    if (!reply) {
+        return res.status(400).json({ message: 'Reply cannot be empty' });
+    }
+
+    try {
+        const newReply = await db.one(
+            'INSERT INTO replies (user_id, comment_id, reply) VALUES ($1, $2, $3) RETURNING *',
+            [userId, commentId, reply]
+        );
+        res.status(201).json(newReply);
+    } catch (error) {
+        console.error('Error replying to eSpace comment:', error.message, error.stack);
+        res.status(500).send('Server error');
+    }
+};
 
 
 const addESpace = async (req, res) => {
@@ -47,7 +117,6 @@ const addESpace = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
-
 
 const getESpaces = async (req, res) => {
     try {
@@ -114,4 +183,8 @@ module.exports = {
     searchESpaces,
     createESpacePost,
     getESpacePosts,
+    likeESpacePost,
+    dislikeESpacePost,
+    commentESpacePost,
+    replyToESpaceComment,
 };

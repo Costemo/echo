@@ -1,3 +1,5 @@
+/* ESpacePosts.css */
+
 .posts-container {
     max-width: 100%;
     margin: 0 auto;
@@ -63,9 +65,7 @@
     background: none;
     border: none;
     color: #e63946;
-    /* margin-left: auto; */
     cursor: pointer;
-    
 }
 
 .post h3 {
@@ -103,7 +103,6 @@
     display: flex;
     align-items: center;
     position: relative;
-    
 }
 
 .comment-input-container input[type="text"] {
@@ -134,9 +133,7 @@
 
 .comment {
     margin-top: 10px;
-    padding: 10px ;
-    /* border-bottom: 1px solid #747272;
-    border-top: 1px solid #747272; */
+    padding: 10px;
     border: 1px solid #747272;
     border-radius: 20px;
     display: flex;
@@ -163,11 +160,11 @@
 
 .like-dislike {
     display: flex;
-    gap: 10px; 
+    gap: 10px;
 }
 
 .comment-actions button {
-    background-color: #3a3a50; 
+    background-color: #3a3a50;
     color: white;
     border: none;
     border-radius: 5px;
@@ -179,12 +176,11 @@
     display: flex;
     align-items: center;
     position: relative;
-    
 }
 
 .reply-container input[type="text"] {
     flex-grow: 1;
-    padding: 10px 40px 10px 10px; 
+    padding: 10px 40px 10px 10px;
     border: .5px solid #747272;
     border-radius: 20px;
     background-color: #2b2b3a;
@@ -209,7 +205,7 @@
 }
 
 .reply {
-    margin-top: 5px; 
+    margin-top: 5px;
     margin-left: 10px;
     border-left: 2px solid white;
 }
@@ -222,5 +218,5 @@
 
 .reply p {
     margin: 0 0 5px;
-    color: #e1e1e1; 
+    color: #e1e1e1;
 }

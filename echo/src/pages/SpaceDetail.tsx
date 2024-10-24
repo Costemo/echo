@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
-import './Profile.css'; 
-import Posts from '../components/Posts';
+import './SpaceDetail.css'; 
+
 import ESpacePosts from '../components/ESpacePosts';
 
 
@@ -42,17 +42,17 @@ const SpaceDetail: React.FC = () => {
     }, [id]);
 
     return (
-        <div className="profile-container">
+        <div className="space-detail-container">
             {error && <p style={{ color: 'red' }}>{error}</p>}
             {space ? (
                 <>
-                    <header className="profile-header">
+                    <header className="space-detail-header">
                         <h1>{space.name}</h1>
                         <p>{space.description}</p>
                     </header>
-                    <main className="profile-posts">
-    <ESpacePosts spaceId={parseInt(id)} />
-</main>
+                    <main className="space-detail-posts">
+                        <ESpacePosts spaceId={parseInt(id)} />
+                    </main>
                 </>
             ) : (
                 <p>Loading...</p>
